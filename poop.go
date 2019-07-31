@@ -15,13 +15,17 @@ const longPoop = int64(10)
 var lastPoop int64
 
 func main() {
-	go serialRead()
+	device := getEnv("DEVICE", "/dev/ttyUSB0")
+	port := getEnv("PORT", "8080")
+
+	go serialRead(device)
 	http.HandleFunc("/", gotPoop)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(
+		fmt.Sprintf(":%s", port), nil))
 }
 
-func serialRead() {
-	c := &serial.Config{Name: "/dev/ttyUSB0", Baud: 9600}
+func serialRead(device string) {
+	c := &serial.Config{Name: device, Baud: 9600}
 	s, err := serial.OpenPort(c)
 	if err != nil {
 		log.Fatal(err)
@@ -99,3 +103,10 @@ const htmlTmpl = `
 	<img src='{{.ImgSrc}}' />
 </body>
 `
+
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}
