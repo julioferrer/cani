@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"bufio"
 )
 
 const longPoop = int64(10)
@@ -15,7 +16,7 @@ const longPoop = int64(10)
 var lastPoop int64
 
 func main() {
-	device := getEnv("DEVICE", "/dev/ttyUSB0")
+	device := getEnv("DEVICE", "/dev/cu.usbserial-A601EN1V")
 	port := getEnv("PORT", "8080")
 
 	go serialRead(device)
@@ -65,6 +66,13 @@ func writeTimestamp(fileName, text string) {
 }
 
 func gotPoop(w http.ResponseWriter, r *http.Request) {
+
+	if "cani/stats" == r.URL.Path[1:] {
+		fmt.Fprintf(w, "%s", readPoopLog(w))
+		return
+	}
+
+
 	if "cani/last" == r.URL.Path[1:] {
 		fmt.Fprintf(w, "Last Poop was %d seconds ago", time.Now().Unix()-lastPoop)
 		return
@@ -99,6 +107,31 @@ func gotPoop(w http.ResponseWriter, r *http.Request) {
 
 func canIPoop() bool {
 	return time.Now().Unix()-lastPoop > longPoop
+}
+
+func readPoopLog(w http.ResponseWriter) string{
+	data, err := os.Open("poop.log")
+	if err != nil {
+		panic(err)
+	}
+
+	defer func(){
+		if err = data.Close(); err != nil{
+			panic(err)
+		}
+	}()
+
+	s := bufio.NewScanner(data)
+	for s.Scan(){
+		fmt.Fprintf(w, "%s", s.Text())
+	}
+
+	err = s.Err()
+	if err != nil {
+		panic(err)
+	}
+
+	return "success"
 }
 
 const htmlTmpl = `
