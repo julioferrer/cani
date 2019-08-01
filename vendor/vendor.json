@@ -1,0 +1,19 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "guarq7gE64TDmNXTUxHoODzIoqQ=",
+			"path": "github.com/tarm/serial",
+			"revision": "98f6abe2eb07edd42f6dfa2a934aea469acc29b7",
+			"revisionTime": "2018-08-30T18:53:46Z"
+		},
+		{
+			"checksumSHA1": "mOHyEUirKfPlwuEKW6osqxwG1wg=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "1393eb0183657fb29200106b17a5042ec6e48dbe",
+			"revisionTime": "2019-07-29T19:58:47Z"
+		}
+	],
+	"rootPath": "github.com/eggman64/cani"
+}

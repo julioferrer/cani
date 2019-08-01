@@ -37,11 +37,10 @@ func serialRead(device string) {
 
 	for true {
 		buf := make([]byte, 4)
-		n, err := s.Read(buf)
+		_, err := s.Read(buf)
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("%s", string(buf[:n]))
 		// Wait because this might be a long pooper who sits in  the darkness for _longPoop_ seconds
 		if canIPoop() {
 			writeTimestamp("poop.log", fmt.Sprintf("%d %d\n", poopStart, lastPoop))
@@ -66,21 +65,31 @@ func writeTimestamp(fileName, text string) {
 }
 
 func gotPoop(w http.ResponseWriter, r *http.Request) {
-	if "last" == r.URL.Path[1:] {
+	if "cani/last" == r.URL.Path[1:] {
 		fmt.Fprintf(w, "Last Poop was %d seconds ago", time.Now().Unix()-lastPoop)
 		return
 	}
 
-	respTpl, err := template.New("resp").Parse(htmlTmpl)
-	if err != nil {
-		log.Fatal("Template f up ", err)
+	if "cani/" == r.URL.Path[1:] {
+		if canIPoop() {
+			fmt.Fprintf(w, "%d", time.Now().Unix()-lastPoop)
+			return
+		}
+		http.Error(w, http.StatusText(http.StatusGone), http.StatusGone)
+		return
 	}
+
 	imgSrc := "https://i.imgur.com/QhWI4Mg.gif"
 	decision := "Nope"
 
 	if canIPoop() {
 		imgSrc = "https://i.imgur.com/l3Bs46c.jpg"
 		decision = "Yes you can!"
+	}
+
+	respTpl, err := template.New("resp").Parse(htmlTmpl)
+	if err != nil {
+		log.Fatal("Template f up ", err)
 	}
 	respTpl.Execute(w, struct {
 		ImgSrc   string
